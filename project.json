@@ -14,6 +14,23 @@
         "assets": ["*.md"]
       }
     },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "harmor:build",
+        "inspect": "inspect",
+        "port": 0
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "harmor:build:development"
+        },
+        "production": {
+          "buildTarget": "harmor:build:production"
+        }
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
