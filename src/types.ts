@@ -1,57 +1,51 @@
 import { EncryptionOptions } from './crypto';
+import { Entry, Request, Response, Timings } from 'har-format';
+import Harmor from './Harmor';
 
 export interface HARmorOptions {
-  /**
-   * The HAR file content
-   */
-  input: string;
 
   /**
    * The rules to apply to the HAR file.
    */
   rules: HARmorRule[];
 
-
+  /**
+   * Encryption options
+   * @default { enabled: true, password: generateRandomPassword() }
+   */
   encryption?: EncryptionOptions;
 }
 
-
-export interface HARmorJWTRule {
-  type: 'jwt',
-  /**
-   * whether to replace the token or just remove it.
-   *
-   * @default replace
-   */
-  action?: 'replace' | 'remove',
-  /**
-   * whether to replace the whole token or just the signature.
-   *
-   *  @default partial
-   */
-  selector?: 'full' | 'partial'
+export type HARmorRegexRule = {
+  type: 'regex';
+  selector: RegExp;
+  replacement?: string | ((value: string[], harmor: Harmor) => string);
 }
 
-
-export interface HARmorReplaceRule {
-  action: 'replace',
-  selector: RegExp | string;
-  replacement: string | ((value: string) => string);
-}
-
-export interface HARmorRemoveRule {
-  action: 'remove',
-  selector: RegExp | string;
-}
-
-export type HARmorRegexRule = HARmorReplaceRule | HARmorRemoveRule;
+type RecursivePartial<T> = {
+  [P in keyof T]?:
+  (T[P] extends (infer U)[] ? RecursivePartial<U>[] : T[P] extends object ? RecursivePartial<T[P]> : T[P]) |
+  ((value: (T[P] extends (infer U)[] ? RecursivePartial<U> : T[P] extends object ? RecursivePartial<T[P]> : T[P])) => boolean) | '*';
+};
 
 
-export interface HARmorPathRule {
-  action: 'replace' | 'remove'
-  selector: string; // request.url.pathname
-  value: any | ((value: any) => boolean);
-  replacement: string | ((value: string) => string);
+type Replacer<T> = T | ((value: T, harmor: Harmor) => any | null | undefined);
+
+type PathSelectors = Partial<{
+  [K in keyof Response as `response.${K}`]: Replacer<Response[K]>
+} & {
+  [K in keyof Request as `request.${K}`]: Replacer<Request[K]>
+} & {
+  [K in keyof Timings as `timings.${K}`]: Replacer<Timings[K]>
+} & {
+  [K in keyof Entry as `${K}`]: Replacer<Entry[K]>
+}>
+
+
+export type HARmorPathRule = {
+  type: 'path';
+  selector: PathSelectors;
 }
 
 export type HARmorRule = HARmorRegexRule | HARmorPathRule;
+

@@ -4,12 +4,10 @@ import * as process from 'process';
 import * as minimist from 'minimist'
 import * as prompts from 'prompts';
 import { isUsingYarn } from './helpers';
-import { HARmorRule } from './types';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { lightCyan, red, reset } from 'kolorist';
+import { green, red, reset, bgRed, bgYellow, yellow } from 'kolorist';
 import { printLogo } from './logo';
-import { encrypt, EncryptionOptions } from './crypto';
 import Harmor from './Harmor';
 
 
@@ -29,11 +27,14 @@ if (major < 16) {
 const argv = minimist<{
   t?: string
   template?: string
-  pass?: string
   allCookies?: boolean
   cookie?: string;
   allHeaders?: boolean
   header?: string;
+  jwt?: string;
+  pass?: string
+  enc?: string;
+  y: boolean;
 }>(process.argv.slice(2), {
   string: [ '_' ],
 })
@@ -42,36 +43,24 @@ const cwd = process.cwd()
 
 async function init() {
   const argTemplate = argv.template || argv.t
+  const argEncryption = argv.enc
   const argPassword = argv.pass
   const argAllCookies = argv.allCookies
   const argCookie = argv.cookie
   const argAllHeaders = argv.allHeaders
   const argHeader = argv.header
-
+  const argJwt = argv.jwt ?? true
+  const argYesForAll = argv.y ?? false
 
   const isYarn = isUsingYarn()
 
-  console.log({ argv, isYarn })
-
-  let result: prompts.Answers<'template' | 'password'>
+  let result: prompts.Answers<'encryption'>
   try {
     result = await prompts([ {
-        type: argTemplate ? null : 'text',
-        name: 'template',
-        message: reset('Template:'),
-        initial: 'default',
-        validate: (prev) => {
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              resolve(true)
-            }, 1000)
-          })
-
-        },
-      }, {
-        type: argPassword ? null : 'password',
-        name: 'password',
-        message: reset('Encryption Password:') + lightCyan(' (leave empty for no encryption)'),
+        type: argEncryption ? null : 'confirm',
+        name: 'encryption',
+        message: reset('Enable encryption'),
+        initial: true
       } ],
       {
         onCancel: () => {
@@ -88,38 +77,53 @@ async function init() {
   const dirname = path.dirname(filePath)
   const fileName = path.basename(filePath, '.har')
 
-  const rules: HARmorRule[] = [ {
-    action: 'replace',
-    selector: /eyJ[a-zA-Z0-9-_]+\.eyJ[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+\b/g,
-    replacement: (value) => {
-      const alg = encrypt(value.split('.')[0], 'davidantoon')
-      const payload = value.split('.')[1];
-      const signature = encrypt(value.split('.')[2], 'davidantoon')
-      return `${alg}.${payload}.${signature}`
-    },
-  } ]
-
   const input = fs.readFileSync(filePath, 'utf8');
 
+  const harmorBuilder = Harmor.Builder()
 
-  const encryption: EncryptionOptions = {
-    enabled: !!result.password,
-    password: result.password === true ? '' : result.password
+  if (result.encryption) {
+    harmorBuilder.encryption(argPassword)
+  }
+  if (argAllCookies) {
+    harmorBuilder.allCookies()
+  }
+  if (argCookie) {
+    if (Array.isArray(argCookie)) {
+      argCookie.forEach(cookie => harmorBuilder.cookie(cookie))
+    } else {
+      harmorBuilder.cookie(argCookie)
+    }
+  }
+  if (argAllHeaders) {
+    harmorBuilder.allHeaders()
+  }
+  if (argHeader) {
+    if (Array.isArray(argHeader)) {
+      argHeader.forEach(header => harmorBuilder.header(header))
+    } else {
+      harmorBuilder.header(argHeader)
+    }
   }
 
-  const harmor = Harmor.builder().jwt().build()
+  if (argJwt) {
+    harmorBuilder.jwt()
+  }
 
+  const harmor = harmorBuilder.build()
+  const output = harmor.sanitize(input)
 
-  // const output = await Ha({ input, encryption, rules })
-
-  const output = ''
+  console.log('\n')
   fs.writeFileSync(path.join(dirname, `${fileName}.harmored.har`), output, 'utf8')
+  console.log('🛡 HAR been armored:', green(path.join(cwd, `${fileName}.harmor.har`)))
+
+  if (result.encryption) {
+    console.log('🔑 Encryption password:', bgRed(harmor.encryption.password))
+    console.log('⚠️', yellow(`Please keep this password safe, you will need it to unarmor the HAR file.`))
+  }
 }
 
 printLogo()
 init().catch((err) => {
   console.error(err);
 })
-
-
 
