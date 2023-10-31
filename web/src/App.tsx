@@ -2,9 +2,10 @@ import { Analytics } from '@vercel/analytics/react';
 
 import example1 from './assets/harmor_1_n.mp4'
 import example2 from './assets/harmor_2_n.mp4'
+import bg from './assets/bg.svg'
 
 const Separator = () => <div style={{
-  background: 'url(/src/assets/bg.svg)',
+  background: bg,
   height: '6px',
   opacity: 0.5,
   borderRadius: '10px',
@@ -32,6 +33,8 @@ function App() {
           <div className="text-center fixed left-8 top-8">
             <a href="https://frontegg.com" target="_blank" rel="noreferrer" className="inline-block">
               <img alt="frontegg logo"
+                   width={170}
+                   height={32}
                    src="https://frontegg.com/wp-content/themes/frontegg/images/logos/logo-black.svg"/>
             </a>
           </div>
@@ -58,8 +61,9 @@ function App() {
               questionnaire, ensuring each data point is reviewed and sanitized as needed.</p>
 
             <div className="text-center mt-8">
-              <video src={example1} autoPlay loop muted controls={false}/>
-              {/*<Example1/>*/}
+              <video preload="none" autoPlay loop muted controls={false}>
+                <source src={example1} type="video/mp4"/>
+              </video>
             </div>
           </div>
           <div className="mt-12 text-left mb-12">
@@ -68,8 +72,9 @@ function App() {
               sanitize HAR files across sessions.</p>
 
             <div className="text-center mt-8">
-              <video src={example2} autoPlay loop muted controls={false}/>
-              {/*<Example1/>*/}
+              <video preload="none" autoPlay loop muted controls={false}>
+                <source src={example2} type="video/mp4"/>
+              </video>
             </div>
           </div>
 
