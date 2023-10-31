@@ -3,6 +3,7 @@ import { gray } from 'kolorist';
 import { Har } from 'har-format';
 import { Choice } from 'prompts';
 import { createAutocompleteSuggestion, SuggestionKeys } from './helpers';
+import { promptOptions } from './constants';
 
 type CookieQuestionerResult = {
   allCookies: boolean;
@@ -37,7 +38,7 @@ const cookiesQuestioner = async (harFile: Har): Promise<CookieQuestionerResult> 
         skipLabel: 'Skip cookies sanitization',
         allLabel: 'All cookies'
       })
-    })).cookie
+    }, promptOptions)).cookie
     if (lastSelected === SuggestionKeys.all) {
       return {
         allCookies: true,

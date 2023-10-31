@@ -1,9 +1,7 @@
 import * as prompts from 'prompts';
 import { gray } from 'kolorist';
-import { Har } from 'har-format';
-import { Choice } from 'prompts';
 import { createAutocompleteSuggestion, SuggestionKeys } from './helpers';
-import { commonJsonRestrictedKeys } from './constants';
+import { commonJsonRestrictedKeys, promptOptions } from './constants';
 
 type ContentKeysQuestionerResult = {
   contentKeys: string[];
@@ -26,7 +24,7 @@ const contentKeysQuestioner = async (): Promise<ContentKeysQuestionerResult> => 
         skipLabel: 'Skip json sanitization',
         allLabel: 'All defaults'
       })
-    })).key
+    }, promptOptions)).key
     if (lastSelected === SuggestionKeys.all) {
       return {
         contentKeys: commonJsonRestrictedKeys,

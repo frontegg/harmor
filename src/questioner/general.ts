@@ -1,6 +1,7 @@
 import * as prompts from 'prompts';
 import { gray } from 'kolorist';
 import Crypto, { EncryptionOptions } from '../crypto';
+import { promptOptions } from './constants';
 
 type GeneralQuestionerResult = {
   encryption: EncryptionOptions;
@@ -28,7 +29,7 @@ const generalQuestioner = async (): Promise<GeneralQuestionerResult> => {
       title: 'by replace with \'_harmored_\'',
       value: false
     } ],
-  })
+  }, promptOptions)
   encryption.enabled = encryptionEnabled;
 
   if (encryptionEnabled) {
@@ -43,7 +44,7 @@ const generalQuestioner = async (): Promise<GeneralQuestionerResult> => {
         }
         return true
       }
-    })
+    }, promptOptions)
 
     encryption.password = encryptionPassword
   }
@@ -54,7 +55,7 @@ const generalQuestioner = async (): Promise<GeneralQuestionerResult> => {
     message: 'Do you want to sanitize all JWT by regex?' + gray(' - algorithm and signature will be sanitized'),
     instructions: false,
     initial: true
-  })
+  }, promptOptions)
   return {
     encryption,
     jwt

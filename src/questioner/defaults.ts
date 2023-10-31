@@ -4,7 +4,7 @@ import {
   commonJsonRestrictedKeys,
   commonQueryParams,
   commonSensitiveCookies,
-  commonSensitiveHeaders
+  commonSensitiveHeaders, promptOptions
 } from './constants';
 
 
@@ -19,7 +19,7 @@ const defaultsQuestioner = async (result: QuestionerResult): Promise<QuestionerR
       choices: commonSensitiveCookies
         .filter(cookie => result.cookies.indexOf(cookie) === -1)
         .map((title) => ({ title, selected: true, value: title })),
-    })
+    }, promptOptions)
     result.cookies = [ ...result.cookies, ...cookiesToAdd.cookie ]
   }
 
@@ -31,7 +31,7 @@ const defaultsQuestioner = async (result: QuestionerResult): Promise<QuestionerR
       choices: commonSensitiveHeaders
         .filter(cookie => result.headers.indexOf(cookie) === -1)
         .map((title) => ({ title, selected: true, value: title })),
-    })
+    }, promptOptions)
     result.headers = [ ...result.headers, ...headersToAdd.headers ]
     console.log('asd')
   }
@@ -44,7 +44,7 @@ const defaultsQuestioner = async (result: QuestionerResult): Promise<QuestionerR
       choices: commonQueryParams
         .filter(queryParam => result.queryParams.indexOf(queryParam) === -1)
         .map((title) => ({ title, selected: true, value: title })),
-    })
+    }, promptOptions)
     result.queryParams = [ ...result.queryParams, ...queryParamsToAdd.queryParams ]
   }
 
@@ -56,9 +56,9 @@ const defaultsQuestioner = async (result: QuestionerResult): Promise<QuestionerR
     const contentKeysToAdd = await prompts({
       type: 'multiselect',
       name: 'contentKeys',
-      message: 'Do you want to add default security "Query Params" ?',
+      message: 'Do you want to add default security "Content Restricted Keys" ?',
       choices: contentKeysChoices,
-    })
+    }, promptOptions)
     result.contentKeys = [ ...result.contentKeys, ...contentKeysToAdd.contentKeys ]
   }
 

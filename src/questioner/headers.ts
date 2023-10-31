@@ -3,6 +3,7 @@ import { gray } from 'kolorist';
 import { Har } from 'har-format';
 import { Choice } from 'prompts';
 import { createAutocompleteSuggestion, SuggestionKeys } from './helpers';
+import { promptOptions } from './constants';
 
 type HeaderQuestionerResult = {
   allHeaders: boolean;
@@ -36,7 +37,7 @@ const headersQuestioner = async (harFile: Har): Promise<HeaderQuestionerResult> 
         skipLabel: 'Skip headers sanitization',
         allLabel: 'All headers'
       })
-    })).header
+    }, promptOptions)).header
     if (lastSelected === SuggestionKeys.all) {
       return {
         allHeaders: true,

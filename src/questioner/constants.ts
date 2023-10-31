@@ -1,3 +1,6 @@
+import { Options } from 'prompts';
+import { red } from 'kolorist';
+
 export const commonSensitiveCookies = [
   'fe_session', // Used by Frontegg to store stateless session in NextJS SDK.
   'fe_refresh_', // Used by Frontegg to store refresh token.
@@ -28,26 +31,24 @@ export const commonQueryParams = [
   'code_verifier', // Used by OAuth2 to store authorization codes.
 ]
 export const commonJsonRestrictedKeys = [
-  'token',
   'refreshToken',
   'refresh_token',
   'accessToken',
   'access_token',
-  'assertion',
-  'auth',
-  'authenticity_token',
   'code_challenge',
   'client_id',
   'client_secret',
   'code',
   'code_challenge',
   'code_verifier',
-  'email',
-  'facetID',
-  'fcParams',
   'id_token',
   'password',
-  'serverData',
-  'state',
   'token',
 ]
+
+
+export const promptOptions: Options = {
+  onCancel: () => {
+    throw new Error(red('✖') + ' Operation cancelled')
+  }
+}

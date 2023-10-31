@@ -3,6 +3,7 @@ import { gray } from 'kolorist';
 import { Har } from 'har-format';
 import { Choice } from 'prompts';
 import { createAutocompleteSuggestion, SuggestionKeys } from './helpers';
+import { promptOptions } from './constants';
 
 type QueryParamsQuestionerResult = {
   allQueryParams: boolean;
@@ -35,7 +36,7 @@ const queryParamsQuestioner = async (harFile: Har): Promise<QueryParamsQuestione
         skipLabel: 'Skip query sanitization',
         allLabel: 'All query params'
       })
-    })).param
+    }, promptOptions)).param
     if (lastSelected === SuggestionKeys.all) {
       return {
         allQueryParams: true,

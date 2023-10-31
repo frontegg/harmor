@@ -3,6 +3,7 @@ import { gray } from 'kolorist';
 import { Har } from 'har-format';
 import { Choice } from 'prompts';
 import { createAutocompleteSuggestion, SuggestionKeys } from './helpers';
+import { promptOptions } from './constants';
 
 type UrlPathsQuestionerResult = {
   urlPathPrefixes: string[];
@@ -33,7 +34,7 @@ const urlPathsQuestioner = async (harFile: Har): Promise<UrlPathsQuestionerResul
         selected,
         skipLabel: 'Skip full sanitization by url'
       })
-    })).param
+    }, promptOptions)).param
     if (lastSelected === SuggestionKeys.all) {
       return {
         urlPathPrefixes: [],
