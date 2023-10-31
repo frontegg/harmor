@@ -10,9 +10,7 @@
     "harmor": "./src/index.js"
   },
   "dependencies": {
-    "@types/get-value": "^3.0.4",
     "@types/har-format": "^1.2.14",
-    "@types/set-value": "^4.0.2",
     "get-value": "^3.0.1",
     "kolorist": "^1.8.0",
     "minimist": "^1.2.8",
@@ -21,6 +19,8 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@types/get-value": "^3.0.4",
+    "@types/set-value": "^4.0.2",
     "@nx/eslint": "17.0.2",
     "@nx/eslint-plugin": "17.0.2",
     "@nx/js": "17.0.2",

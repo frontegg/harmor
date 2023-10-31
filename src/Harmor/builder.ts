@@ -1,13 +1,22 @@
 import Harmor from './harmor';
 import { HARmorRule } from '../types';
 import { EncryptionOptions } from '../crypto';
-import { Header } from 'har-format';
-
+import { Content, Cookie, Entry, Header, PostData, QueryString, Request } from 'har-format';
+import * as setValue from 'set-value';
 
 export default class HarmorBuilder {
 
   private rules: HARmorRule[] = []
   private encryptionOptions: EncryptionOptions = { enabled: false }
+
+
+  encryption(password?: string) {
+    this.encryptionOptions = {
+      enabled: true,
+      password: password ? `${password}` : undefined
+    }
+    return this
+  }
 
 
   jwt() {
@@ -26,33 +35,52 @@ export default class HarmorBuilder {
     return this
   }
 
+  authorization() {
+    this.header('authorization')
+    return this
+  }
+
   allCookies() {
+
+    const headerArmorFn = (value: Header[], { shouldEncrypt, encrypt }: Harmor) => {
+      if (shouldEncrypt) {
+        return value.map(h => {
+          if (h.name.toLowerCase() !== 'set-cookie' ||
+            h.name.toLowerCase() !== 'cookie') {
+            return h
+          }
+          h.value = shouldEncrypt ? encrypt(h.value) : '_harmored_'
+          return h
+        })
+      }
+    }
+
+    const cookieArmorFn = (value: Cookie[], { shouldEncrypt, encrypt }: Harmor) => {
+      if (shouldEncrypt) {
+        return value.map(c => {
+          c.value = encrypt(c.value)
+          return c
+        })
+      } else {
+        return value.map(c => {
+          c.value = '_harmored_'
+          return c
+        })
+      }
+    }
+
     this.rules.push({
       type: 'path',
       selector: {
-        'request.cookies': [],
-        'response.cookies': [],
-        'response.headers': (value) => {
-          return value.filter(h =>
-            h.name.toLowerCase() !== 'set-cookie' &&
-            h.name.toLowerCase() !== 'cookie')
-        },
+        'request.cookies': cookieArmorFn,
+        'response.cookies': cookieArmorFn,
+        'response.headers': headerArmorFn,
+        'request.headers': headerArmorFn,
       }
     })
     return this
   }
 
-  allHeaders() {
-    this.rules.push({
-      type: 'path',
-      selector: {
-        'request.headers': () => [],
-        'response.headers': () => []
-      },
-
-    })
-    return this
-  }
 
   cookie(cookie: string) {
     this.rules.push({
@@ -76,7 +104,7 @@ export default class HarmorBuilder {
 
     this.rules.push({
       type: 'regex',
-      selector: new RegExp(`(${cookie}[^=]+=)([^;"]+)`, 'g'),
+      selector: new RegExp(`(${cookie}[^="]+=)([^;"=]+)`, 'g'),
       replacement: (value, { shouldEncrypt, encrypt }) => {
         if (shouldEncrypt) {
           return value[0] + encrypt(value[1]);
@@ -87,11 +115,25 @@ export default class HarmorBuilder {
     return this
   }
 
-  encryption(password?: string) {
-    this.encryptionOptions = {
-      enabled: true,
-      password: password ? `${password}` : undefined
+
+  allHeaders() {
+
+    const headerArmorFn = (value: Header[], { shouldEncrypt, encrypt }: Harmor) => {
+      if (shouldEncrypt) {
+        return value.map(h => {
+          h.value = shouldEncrypt ? encrypt(h.value) : '_harmored_'
+          return h
+        })
+      }
     }
+
+    this.rules.push({
+      type: 'path',
+      selector: {
+        'request.headers': headerArmorFn,
+        'response.headers': headerArmorFn
+      },
+    })
     return this
   }
 
@@ -119,21 +161,116 @@ export default class HarmorBuilder {
     return this
   }
 
-  scrub(str: string) {
+  allQueryParams() {
+    const armorFn = (value: QueryString[], { shouldEncrypt, encrypt }: Harmor) => {
+      if (shouldEncrypt) {
+        return value.map(h => {
+          h.value = shouldEncrypt ? encrypt(h.value) : '_harmored_'
+          return h
+        })
+      }
+    }
+
     this.rules.push({
-        type: 'regex',
-        selector: new RegExp(`[\\s";,&?]+${str}=([\\w+-_/=#|.%&:!*()\`~'"]+)([&\\\\",\\s"}};])`, 'g')
-      }, {
-        type: 'regex',
-        selector: new RegExp(`"name": "${str}",[\\s\\w+:"-\\%!*()\`~'.,#]*?"value": "([\\w+-_:&\\+=#~/$()\\.\\,\\*\\!|%"'\\s;{}]+?)"\\s+,`, 'g')
+      type: 'path',
+      selector: {
+        'request.queryString': armorFn,
       },
-      {
-        type: 'regex',
-        selector: new RegExp(`("value": ")([\\w+-_:&+=#$~/()\\\\.\\,*!|%"\\s;]+)("[,\\s}}]+)([\\s\\w+:"-\\\\%!*\`()~'#.]*"name": "${str}")`, 'g')
-      })
+    })
     return this
   }
 
+  queryParam(params: string[]) {
+    const armorFn = (value: QueryString[], harmor: Harmor) => {
+      return value.map(h => {
+        if (params.indexOf(h.name.toLowerCase()) === -1) {
+          return h
+        }
+        if (harmor.shouldEncrypt) {
+          h.value = harmor.encrypt(h.value)
+        } else {
+          h.value = '_harmored_'
+        }
+        return h
+      })
+    }
+    this.rules.push({
+      type: 'path',
+      selector: {
+        'request.queryString': armorFn,
+      },
+    })
+    return this
+  }
+
+
+  private applicationJsonReplacer = (input: string, restrictedKeys: string[], harmor: Harmor): any => {
+
+    try {
+      const json = JSON.parse(input)
+
+      const replacer = (key: string, value: any) => {
+        if (restrictedKeys.includes(key)) {
+          if (harmor.shouldEncrypt) {
+            return harmor.encrypt(value)
+          } else {
+            return '_harmored_'
+          }
+        }
+        return value
+      }
+      return JSON.stringify(json, replacer)
+    } catch (e) {
+      return input
+    }
+  }
+
+  contentKey(restrictedKeys: string[]) {
+    const contentArmorFn = (value: Content, harmor: Harmor) => {
+      if (value && value.text && value.mimeType === 'application/json') {
+        value.text = this.applicationJsonReplacer(value.text, restrictedKeys, harmor)
+      }
+      return value
+    }
+    const postDataArmorFn = (value: PostData, harmor: Harmor) => {
+      if (value && value.text && value.mimeType === 'application/json') {
+        value.text = this.applicationJsonReplacer(value.text, restrictedKeys, harmor)
+      }
+      return value
+    }
+
+    this.rules.push({
+      type: 'path',
+      selector: {
+        'request.postData': postDataArmorFn,
+        'response.content': contentArmorFn
+      },
+    })
+  }
+
+
+  byUrlPath(urlPathPrefix: string[]) {
+    this.rules.push({
+      type: 'path',
+      selector: {
+        '*': (value: Entry) => {
+          const { pathname } = new URL(value?.request?.url)
+          if (urlPathPrefix.find(urlPath => pathname.startsWith(urlPath))) {
+            setValue(value, 'request.cookies', [ { name: '_harmored_', value: '_harmored_' } ], { merge: false })
+            setValue(value, 'request.headers', [ { name: '_harmored_', value: '_harmored_' } ], { merge: false })
+            setValue(value, 'request.queryString', [ { name: '_harmored_', value: '_harmored_' } ], { merge: false })
+            setValue(value, 'request.content.text', '_harmored_', { merge: false })
+
+            setValue(value, 'response.cookies', [ { name: '_harmored_', value: '_harmored_' } ], { merge: false })
+            setValue(value, 'response.headers', [ { name: '_harmored_', value: '_harmored_' } ], { merge: false })
+            setValue(value, 'response.queryString', [ { name: '_harmored_', value: '_harmored_' } ], { merge: false })
+            setValue(value, 'response.content.text', '_harmored_', { merge: false })
+          }
+          return value
+        }
+      },
+    })
+  }
 
   build() {
     return new Harmor({

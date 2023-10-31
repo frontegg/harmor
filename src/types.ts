@@ -39,6 +39,8 @@ type PathSelectors = Partial<{
   [K in keyof Timings as `timings.${K}`]: Replacer<Timings[K]>
 } & {
   [K in keyof Entry as `${K}`]: Replacer<Entry[K]>
+} & {
+  "*": Replacer<Entry>
 }>
 
 

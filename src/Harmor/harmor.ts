@@ -3,7 +3,7 @@ import HarmorBuilder from './builder';
 import Crypto, { EncryptionOptions } from '../crypto';
 import * as getValue from 'get-value'
 import * as setValue from 'set-value'
-
+import { Entry } from 'har-format';
 
 export default class Harmor {
   rules: HARmorRule[];
@@ -46,17 +46,6 @@ export default class Harmor {
       return acc
     }, [ [], [] ])
 
-    const jsonContent = JSON.parse(content);
-    for (const rule of pathRules) {
-      Object.keys(rule.selector).forEach((path) => {
-        rule.selector[path] = rule.selector[path] || (() => null)
-
-        const value = getValue(jsonContent, path)
-        const replacement = rule.selector[path]
-        const newValue = replacement(value, this)
-        setValue(jsonContent, path, newValue)
-      });
-    }
 
     for (const rule of regexRules) {
       if (typeof rule.replacement === 'string') {
@@ -71,11 +60,34 @@ export default class Harmor {
     }
 
 
+    const jsonContent = JSON.parse(content);
+    const entries = jsonContent.log.entries;
+    jsonContent.log.entries = entries.map((entry: Entry) => {
+      for (const rule of pathRules) {
+        const selectors = Object.keys(rule.selector);
+        for (const path of selectors) {
+          if (path === '*') {
+            const value = entry
+            const replacement = rule.selector[path]
+            return replacement(value, this)
+          } else if (typeof rule.selector[path] === 'function') {
+            const value = getValue(entry, path)
+            const replacement = rule.selector[path]
+            const newValue = replacement(value, this)
+            setValue(entry, path, newValue)
+          } else {
+            setValue(entry, path, rule.selector[path])
+          }
+        }
+      }
+      return entry
+    });
+
+
     if (this.shouldEncrypt) {
-      const jsonContent = JSON.parse(content)
       jsonContent.harmor = Crypto.encrypt(JSON.stringify(this.encrypted), this.encryption.password)
-      content = JSON.stringify(jsonContent, null, 2)
     }
-    return content
+
+    return JSON.stringify(jsonContent, null, 2)
   }
 }

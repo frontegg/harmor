@@ -40,7 +40,7 @@ const generateRandomPassword = (length = 24, includeSymbols = true) => {
  * @param length The length of the password to generate
  * @returns A random password
  */
-const generateEntityName = (length = 64) => {
+const generateEntityName = (length = 32) => {
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let retVal = '';
   for (let i = 0, n = charset.length; i < length; ++i) {
@@ -61,7 +61,6 @@ const encrypt = (text: string, password: string): string => {
   const encryptedText = encrypted.toString('hex')
   return `${salt}__${encryptedText}`;
 }
-
 
 const decrypt = (encrypted: string, password: string): string => {
   const algorithm = 'aes-256-cbc';
