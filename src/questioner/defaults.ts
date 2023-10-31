@@ -33,7 +33,6 @@ const defaultsQuestioner = async (result: QuestionerResult): Promise<QuestionerR
         .map((title) => ({ title, selected: true, value: title })),
     }, promptOptions)
     result.headers = [ ...result.headers, ...headersToAdd.headers ]
-    console.log('asd')
   }
 
   if (!result.allQueryParams) {

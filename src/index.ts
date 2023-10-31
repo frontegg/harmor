@@ -114,21 +114,21 @@ async function init() {
       message: 'Do you want to save this template for future use?',
       initial: true
     }, {
-      type: 'text',
+      type: (_, values) => values.confirm ? 'text' : null,
       name: 'templateName',
       message: 'Enter template name:',
-      active: (_, values) => values.confirm,
     } ], promptOptions)
 
     if (confirm) {
-      const name = templateName || 'harmor.template.json'
+      let name = templateName || 'harmor.template.json'
+      name = name.endsWith('.json') ? name : `${name}.json`
       fs.writeFileSync(path.join(dirname, name), JSON.stringify(result), 'utf8')
     }
   }
 
   const harmorBuilder = Harmor.Builder()
 
-  if (result.encryption) {
+  if (result.encryption.enabled) {
     harmorBuilder.encryption(result.encryption.password)
   }
   if (result.allCookies) {
