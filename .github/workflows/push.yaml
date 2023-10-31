@@ -1,6 +1,6 @@
 name: "Push Workflow"
 on:
-  push:
+  workflow_dispatch:
     branches:
       - master
 
