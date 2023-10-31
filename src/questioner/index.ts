@@ -4,37 +4,25 @@ import headersQuestioner from './headers';
 import { Har } from 'har-format';
 import queryParamsQuestioner from './queryParams';
 import generalQuestioner from './general';
-import { EncryptionOptions } from '../crypto';
-
-
-type QuestionerResult = {
-  encryption?: EncryptionOptions;
-
-  allCookies: boolean;
-  cookies: string[];
-  allHeaders: boolean;
-  headers: string[];
-  allQueryParams: boolean;
-  queryParams: string[];
-
-  jwt?: boolean;
-  authorization?: boolean;
-  contentKey?: string;
-  urlPathPrefix?: string;
-  pass?: string;
-
-}
+import { QuestionerResult } from './types';
+import defaultsQuestioner from './defaults';
+import contentKeysQuestioner from './contentKeys';
+import urlPathsQuestioner from './urlPathPrefix';
 
 
 const questioner = async (harFile: Har): Promise<QuestionerResult> => {
   printLogo()
 
-  return {
+  const result = {
     ...(await generalQuestioner()),
     ...(await cookiesQuestioner(harFile)),
     ...(await headersQuestioner(harFile)),
     ...(await queryParamsQuestioner(harFile)),
+    ...(await urlPathsQuestioner(harFile)),
+    ...(await contentKeysQuestioner()),
   }
+
+  return await defaultsQuestioner(result)
 }
 
 

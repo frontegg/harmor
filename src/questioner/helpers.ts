@@ -4,7 +4,7 @@ import { green, lightGray, yellow } from 'kolorist';
 type Options = {
   selected: string[],
   skipLabel: string;
-  allLabel: string;
+  allLabel?: string;
 }
 
 export const SuggestionKeys = {
@@ -20,7 +20,11 @@ export const createAutocompleteSuggestion = ({
   const choices = _choices.filter(({ title }) => !selected.includes(title))
   if (input.length === 0) {
     if (selected.length === 0) {
-      return [ { title: lightGray(skipLabel), value: '__harmor__skip__' }, { title: yellow(allLabel), value: '__harmor__all__' }, ...choices ]
+      if (allLabel == null) {
+        return [ { title: lightGray(skipLabel), value: '__harmor__skip__' }, ...choices ]
+      } else {
+        return [ { title: lightGray(skipLabel), value: '__harmor__skip__' }, { title: yellow(allLabel), value: '__harmor__all__' }, ...choices ]
+      }
     } else {
       return [ { title: green('Done'), value: '__harmor__done__' }, ...choices ]
     }

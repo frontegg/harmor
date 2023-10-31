@@ -1,7 +1,7 @@
 import Harmor from './harmor';
 import { HARmorRule } from '../types';
 import { EncryptionOptions } from '../crypto';
-import { Content, Cookie, Entry, Header, PostData, QueryString, Request } from 'har-format';
+import { Content, Cookie, Entry, Header, PostData, QueryString } from 'har-format';
 import * as setValue from 'set-value';
 
 export default class HarmorBuilder {
@@ -9,7 +9,10 @@ export default class HarmorBuilder {
   private rules: HARmorRule[] = []
   private encryptionOptions: EncryptionOptions = { enabled: false }
 
-
+  /**
+   * Enable encryption for all sanitized values.
+   * @param password
+   */
   encryption(password?: string) {
     this.encryptionOptions = {
       enabled: true,
@@ -18,7 +21,10 @@ export default class HarmorBuilder {
     return this
   }
 
-
+  /**
+   * Sanitize all JWT in the HAR file by encrypting algorithm and signature
+   * parts or replacing them with `_harmored_` if encryption is disabled.
+   */
   jwt() {
     this.rules.push({
       type: 'regex',
@@ -35,11 +41,10 @@ export default class HarmorBuilder {
     return this
   }
 
-  authorization() {
-    this.header('authorization')
-    return this
-  }
-
+  /**
+   * Sanitize all cookies in the HAR file by encrypting them
+   * or replacing them with `_harmored_` if encryption is disabled.
+   */
   allCookies() {
 
     const headerArmorFn = (value: Header[], { shouldEncrypt, encrypt }: Harmor) => {
@@ -81,7 +86,10 @@ export default class HarmorBuilder {
     return this
   }
 
-
+  /**
+   * Sanitize a specific cookie in the HAR file by encrypting its value.
+   * @param cookie - The name / prefix of the cookie to sanitize.
+   */
   cookie(cookie: string) {
     this.rules.push({
       type: 'path',
@@ -115,7 +123,10 @@ export default class HarmorBuilder {
     return this
   }
 
-
+  /**
+   * Sanitize all headers in the HAR file by encrypting them
+   * or replacing them with `_harmored_` if encryption is disabled.
+   */
   allHeaders() {
 
     const headerArmorFn = (value: Header[], { shouldEncrypt, encrypt }: Harmor) => {
@@ -137,6 +148,10 @@ export default class HarmorBuilder {
     return this
   }
 
+  /**
+   * Sanitize a specific header in the HAR file by encrypting its value.
+   * @param header - The name / prefix of the header to sanitize.
+   */
   header(header: string) {
     const armorFn = (value: Header[], harmor: Harmor) => {
       return value.map(h => {
@@ -161,6 +176,10 @@ export default class HarmorBuilder {
     return this
   }
 
+  /**
+   * Sanitize all query parameters in the HAR file by encrypting them
+   * or replacing them with `_harmored_` if encryption is disabled.
+   */
   allQueryParams() {
     const armorFn = (value: QueryString[], { shouldEncrypt, encrypt }: Harmor) => {
       if (shouldEncrypt) {
@@ -180,6 +199,10 @@ export default class HarmorBuilder {
     return this
   }
 
+  /**
+   * Sanitize a specific query parameter in the HAR file by encrypting its value.
+   * @param params - The name / prefix of the query parameter to sanitize.
+   */
   queryParam(params: string[]) {
     const armorFn = (value: QueryString[], harmor: Harmor) => {
       return value.map(h => {
@@ -203,7 +226,6 @@ export default class HarmorBuilder {
     return this
   }
 
-
   private applicationJsonReplacer = (input: string, restrictedKeys: string[], harmor: Harmor): any => {
 
     try {
@@ -225,6 +247,10 @@ export default class HarmorBuilder {
     }
   }
 
+  /**
+   * Sanitize a specific request / response json body keys.
+   * @param restrictedKeys - The name of the json key to sanitize its value.
+   */
   contentKey(restrictedKeys: string[]) {
     const contentArmorFn = (value: Content, harmor: Harmor) => {
       if (value && value.text && value.mimeType === 'application/json') {
@@ -248,7 +274,10 @@ export default class HarmorBuilder {
     })
   }
 
-
+  /**
+   * Sanitize all request / response (headers, cookies, queryParams, body) based on provided url path prefix.
+   * @param urlPathPrefix - The url path prefix to sanitize.
+   */
   byUrlPath(urlPathPrefix: string[]) {
     this.rules.push({
       type: 'path',
@@ -272,6 +301,9 @@ export default class HarmorBuilder {
     })
   }
 
+  /**
+   * Build the Harmor instance, which can be used to sanitize HAR files.
+   */
   build() {
     return new Harmor({
       rules: this.rules,

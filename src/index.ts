@@ -103,22 +103,12 @@ async function init() {
     harmorBuilder.jwt()
   }
 
-  if (result.authorization) {
-    harmorBuilder.authorization()
+  if (result.contentKeys && result.contentKeys.length > 0) {
+    harmorBuilder.contentKey(result.contentKeys)
   }
 
-  if (argContentKey) {
-    harmorBuilder.contentKey(typeof argContentKey === 'string' ? [ argContentKey ] : argContentKey)
-  }
-
-  if (argUrlPathPrefix) {
-    const urlPathPrefixs = Array.isArray(argUrlPathPrefix) ? argUrlPathPrefix : [ argUrlPathPrefix ]
-    harmorBuilder.byUrlPath(urlPathPrefixs)
-  }
-
-  if (argQueryParam) {
-    const queryParams = Array.isArray(argQueryParam) ? argQueryParam : [ argQueryParam ]
-    harmorBuilder.queryParam(queryParams)
+  if (result.urlPathPrefixes && result.urlPathPrefixes.length > 0) {
+    harmorBuilder.byUrlPath(result.urlPathPrefixes)
   }
 
 
