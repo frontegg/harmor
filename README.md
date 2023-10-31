@@ -2,6 +2,8 @@
 
 Safeguard your HAR (HTTP Archive) files with `harmor`. It's like armor for your HAR files!
 
+Visit the [harmor.dev](https://harmor.dev) for more details.
+
 ## Table of Contents
 
 - [Usage](#usage)

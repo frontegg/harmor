@@ -28,37 +28,37 @@ jobs:
         run: yarn install
       - name: "Build Packages"
         run: yarn build
-#      - name: "Authenticate with Registry"
-#        run: |
-#          yarn logout
-#          echo "init-author-name=Frontegg LTD" > .npmrc
-#          echo "init-author-email=hello@frontegg.com" >> .npmrc
-#          echo "init-author-url=https://frontegg.com" >> .npmrc
-#          echo "init-license=MIT" >> .npmrc
-#          echo "always-auth=true" >> .npmrc
-#          echo "registry=https://registry.npmjs.org" >> .npmrc
-#          echo "_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
-#          echo "@frontegg:registry=https://registry.npmjs.org" >> .npmrc
-#          echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
-#          npm whoami
-#        env:
-#          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-#      - name: "Copy .npmrc .npmignore to lib folders"
-#        uses: actions/github-script@v6
-#        with:
-#          script: |
-#            const fs = require("fs");
-#            const npmIgnore = fs.readFileSync('./.npmignore', { encoding:"utf-8" })
-#            const npmrc = fs.readFileSync('./.npmrc', { encoding:"utf-8" })
-#            const libs = ['harmor'];
-#            libs.forEach(lib => {
-#              fs.writeFileSync(`./dist/${lib}/.npmignore`, npmIgnore, { encoding:"utf-8" });
-#              fs.writeFileSync(`./dist/${lib}/.npmrc`, npmrc, { encoding:"utf-8" });
-#            });
-#
-#      - name: "Publish harmor to NPM"
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-#        run: cd ./dist/harmor && npm publish --tag latest
+      - name: "Authenticate with Registry"
+        run: |
+          yarn logout
+          echo "init-author-name=Frontegg LTD" > .npmrc
+          echo "init-author-email=hello@frontegg.com" >> .npmrc
+          echo "init-author-url=https://frontegg.com" >> .npmrc
+          echo "init-license=MIT" >> .npmrc
+          echo "always-auth=true" >> .npmrc
+          echo "registry=https://registry.npmjs.org" >> .npmrc
+          echo "_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
+          echo "@frontegg:registry=https://registry.npmjs.org" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
+          npm whoami
+        env:
+          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      - name: "Copy .npmrc .npmignore to lib folders"
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require("fs");
+            const npmIgnore = fs.readFileSync('./.npmignore', { encoding:"utf-8" })
+            const npmrc = fs.readFileSync('./.npmrc', { encoding:"utf-8" })
+            const libs = ['harmor'];
+            libs.forEach(lib => {
+              fs.writeFileSync(`./dist/${lib}/.npmignore`, npmIgnore, { encoding:"utf-8" });
+              fs.writeFileSync(`./dist/${lib}/.npmrc`, npmrc, { encoding:"utf-8" });
+            });
+
+      - name: "Publish harmor to NPM"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: cd ./dist/harmor && npm publish --tag latest
 
