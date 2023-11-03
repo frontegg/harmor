@@ -53,7 +53,3 @@ You can simply use the CLI questionnaire to generate a template file for you.
 
 Interested in contributing to `harmor`? We'd love to have you! Check out our [CONTRIBUTING.md](./CONTRIBUTING.md) for
 guidelines.
-
-## License
-
-This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
