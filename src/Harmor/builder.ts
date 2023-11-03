@@ -302,7 +302,7 @@ export default class HarmorBuilder {
   }
 
   /**
-   * Build the Harmor instance, which can be used to sanitize HAR files.
+   * Build the HARmor instance, which can be used to sanitize HAR files.
    */
   build() {
     return new Harmor({
