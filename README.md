@@ -9,7 +9,6 @@ Visit the [harmor.dev](https://harmor.dev) for more details.
 - [Usage](#usage)
 - [Template Format](#template-format)
 - [Features](#features)
-- [License](#license)
 
 ## Usage
 
