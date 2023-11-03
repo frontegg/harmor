@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
-     xmlns:svgjs="http://svgjs.dev/svgjs" viewBox="0 0 700 700" width="700" height="700" opacity="0.6">
+     xmlns:svgjs="http://svgjs.dev/svgjs" viewBox="0 0 700 700" width="700" height="700" opacity="0.5">
     <defs>
-        <linearGradient gradientTransform="rotate(174, 0.5, 0.5)" x1="50%" y1="0%" x2="50%" y2="100%"
+        <linearGradient gradientTransform="rotate(174, 0.5, 0.5)" x1="50%" y1="0%" x2="50%" y2="120%"
                         id="ffflux-gradient">
             <stop stop-color="hsl(0, 0%, 100%)" stop-opacity="1" offset="40%"></stop>
             <stop stop-color="#d62305" stop-opacity="1" offset="100%"></stop>

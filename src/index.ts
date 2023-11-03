@@ -40,7 +40,7 @@ function showUsage() {
   Usage: npx harmor <path_to_file>
 
   Description:
-      Harmor is a tool designed to sanitize HAR files.
+      HARmor is a tool designed to sanitize HAR files.
 
   Options:
       --template=<path_to_template>    The path to a JSON file containing the template to use for sanitization.

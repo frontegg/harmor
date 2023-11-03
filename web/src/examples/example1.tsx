@@ -17,7 +17,7 @@ const allSteps: TerminalRowProps[] = [ {
   delay: 1000
 }, {
   type: 'input',
-  element: 'npx harmor ./domain.com.har',
+  element: 'npx harmor@latest ./domain.com.har',
   delay: 1000
 }, {
   type: 'output',
@@ -55,6 +55,7 @@ const Example1: FC = () => {
       setStep(allSteps.slice(0, steps.length + 1))
     }, duration)
   }, [ steps ]);
+
   return <Terminal name="HARMOR Basic Usage" >
     {steps.map((value, index) => <TerminalRow key={index} {...value}/>)}
   </Terminal>
