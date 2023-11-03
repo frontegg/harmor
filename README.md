@@ -1,4 +1,4 @@
-# `harmor` - Your HAR Armor
+# `HARmor` - Your HAR Armor
 
 Safeguard your HAR (HTTP Archive) files with `harmor`. It's like armor for your HAR files!
 
