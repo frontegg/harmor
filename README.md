@@ -12,7 +12,7 @@ Visit the [harmor.dev](https://harmor.dev) for more details.
 
 ## Usage
 
-There's no need for a global installation. Simply use `harmor` with `npx` whenever you need it!
+There's no need for a global installation. Use `harmor` with `npx` whenever you need it!
 
 ### Basic Usage:
 
@@ -33,14 +33,14 @@ For a more streamlined process, you can use a template:
 npx harmor --template=harmor.template.json path_to_your_file.har
 ```
 
-Simply replace `harmor.template.json` with the path to your template file.
+Replace `harmor.template.json` with the path to your template file.
 
 ## Template Format
 
 Your template file should be a JSON file with your sanitization preferences.
 Detailed documentation on the template format will be added soon.
 
-You can simply use the CLI questionnaire to generate a template file for you.
+You can use the CLI questionnaire to generate a template file for you.
 
 ## Features
 
