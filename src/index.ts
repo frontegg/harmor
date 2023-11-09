@@ -130,13 +130,7 @@ async function init() {
     }
   }
 
-  let harmor: Harmor;
-  if (template.type === 'advanced') {
-    harmor = new Harmor(template)
-  } else {
-    const harmorBuilder = Harmor.Builder().fromTemplate(template)
-    harmor = harmorBuilder.build()
-  }
+  const harmor = Harmor.Builder().fromTemplate(template)
 
   const output = harmor.sanitize(input)
 

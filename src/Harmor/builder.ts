@@ -4,6 +4,7 @@ import { EncryptionOptions } from '../crypto';
 import { Content, Cookie, Entry, Header, PostData, QueryString } from 'har-format';
 import * as setValue from 'set-value';
 import { QuestionerResult } from '../questioner/types';
+import { HARmorTemplate } from '../templates/types';
 
 export default class HarmorBuilder {
 
@@ -314,7 +315,11 @@ export default class HarmorBuilder {
 
 
 
-  fromTemplate = (result: QuestionerResult) => {
+  fromTemplate = (result: HARmorTemplate):Harmor => {
+    if(result.type === 'advanced') {
+      return new Harmor(result)
+    }
+
     if (result.encryption.enabled) {
       this.encryption(result.encryption.password)
     }
@@ -354,7 +359,7 @@ export default class HarmorBuilder {
       this.byUrlPath(result.urlPathPrefixes)
     }
 
-    return this;
+    return this.build();
   }
 
 

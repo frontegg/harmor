@@ -9,8 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: "Build & Test"
+  build:
+    name: "Build"
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout"
