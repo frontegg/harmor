@@ -4,6 +4,7 @@ import Crypto, { EncryptionOptions } from '../crypto';
 import * as getValue from 'get-value'
 import * as setValue from 'set-value'
 import { Entry } from 'har-format';
+import { QuestionerResult } from '../questioner/types';
 
 export default class Harmor {
   rules: HARmorRule[];
@@ -90,4 +91,5 @@ export default class Harmor {
 
     return JSON.stringify(jsonContent, null, 2)
   }
+
 }

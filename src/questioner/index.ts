@@ -14,6 +14,7 @@ const questioner = async (harFile: Har): Promise<QuestionerResult> => {
   printLogo()
 
   const result = {
+
     ...(await generalQuestioner()),
     ...(await cookiesQuestioner(harFile)),
     ...(await headersQuestioner(harFile)),
