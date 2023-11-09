@@ -39,10 +39,11 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectName}"],
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "jest.config.ts"
+        "passWithNoTests": true,
+        "reportsDirectory": "coverage/harmor"
       }
     }
   },

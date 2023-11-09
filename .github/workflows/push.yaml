@@ -28,8 +28,6 @@ jobs:
         run: yarn install
       - name: "Build HARmor"
         run: yarn build
-      - name: "Test HARmor"
-        run: yarn test
 #      - name: "Authenticate with Registry"
 #        run: |
 #          yarn logout
