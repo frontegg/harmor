@@ -3,6 +3,8 @@ import { HARmorRule } from '../types';
 import { EncryptionOptions } from '../crypto';
 import { Content, Cookie, Entry, Header, PostData, QueryString } from 'har-format';
 import * as setValue from 'set-value';
+import { QuestionerResult } from '../questioner/types';
+import { HARmorTemplate } from '../templates/types';
 
 export default class HarmorBuilder {
 
@@ -310,5 +312,55 @@ export default class HarmorBuilder {
       encryption: this.encryptionOptions
     })
   }
+
+
+
+  fromTemplate = (result: HARmorTemplate):Harmor => {
+    if(result.type === 'advanced') {
+      return new Harmor(result)
+    }
+
+    if (result.encryption.enabled) {
+      this.encryption(result.encryption.password)
+    }
+
+    if (result.allCookies) {
+      this.allCookies()
+    }
+    if (result.cookies.length > 0) {
+      result.cookies.forEach(cookie => this.cookie(cookie))
+    }
+
+    if (result.allHeaders) {
+      this.allHeaders()
+    }
+
+    if (result.headers.length > 0) {
+      result.headers.forEach(header => this.header(header))
+    }
+
+    if (result.allQueryParams) {
+      this.allQueryParams()
+    }
+
+    if (result.queryParams.length > 0) {
+      this.queryParam(result.queryParams)
+    }
+
+    if (result.jwt) {
+      this.jwt()
+    }
+
+    if (result.contentKeys && result.contentKeys.length > 0) {
+      this.contentKey(result.contentKeys)
+    }
+
+    if (result.urlPathPrefixes && result.urlPathPrefixes.length > 0) {
+      this.byUrlPath(result.urlPathPrefixes)
+    }
+
+    return this.build();
+  }
+
 
 }

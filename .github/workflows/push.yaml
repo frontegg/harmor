@@ -9,8 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  publish-packages:
-    name: "Publish Package"
+  build:
+    name: "Build"
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout"
@@ -26,7 +26,7 @@ jobs:
           node-version: "${{ steps.nvm.outputs.NVMRC }}"
       - name: "Install Dependencies"
         run: yarn install
-      - name: "Build Packages"
+      - name: "Build HARmor"
         run: yarn build
 #      - name: "Authenticate with Registry"
 #        run: |

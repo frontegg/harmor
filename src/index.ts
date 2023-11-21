@@ -7,10 +7,10 @@ import * as path from 'node:path';
 import { green, bgRed, yellow, red } from 'kolorist';
 import Harmor from './Harmor';
 import questioner from './questioner';
-import { QuestionerResult } from './questioner/types';
 import * as prompts from 'prompts';
 import { promptOptions } from './questioner/constants';
-
+import templates from './templates';
+import { HARmorTemplate } from './templates/types';
 
 const currentNodeVersion = process.versions.node;
 const semver = currentNodeVersion.split('.');
@@ -90,24 +90,28 @@ async function init() {
   const harFile = JSON.parse(input);
 
 
-  let result: QuestionerResult
+  let template: HARmorTemplate
   if (argTemplate) {
     const templateFilePath = path.join(process.cwd(), argTemplate);
+
+    if (templates[argTemplate]) {
+      template = templates[argTemplate];
+    }
     if (!fs.existsSync(templateFilePath)) {
       showUsage()
       console.log(red(`Error: Template file "${templateFilePath}" does not exist.`));
       process.exit(1);
     }
     try {
-      result = JSON.parse(fs.readFileSync(templateFilePath, 'utf8'));
+      template = JSON.parse(fs.readFileSync(templateFilePath, 'utf8'));
     } catch (err) {
       showUsage()
       console.log(red(`Error: Template file "${templateFilePath}" is not a valid JSON file.`));
       process.exit(1);
     }
   } else {
-    result = await questioner(harFile)
-
+    const result = await questioner(harFile)
+    template = { type: 'basic', ...result }
     const { confirm, templateName } = await prompts([ {
       type: 'confirm',
       name: 'confirm',
@@ -126,51 +130,9 @@ async function init() {
     }
   }
 
-  const harmorBuilder = Harmor.Builder()
+  const harmor = Harmor.Builder().fromTemplate(template)
 
-  if (result.encryption.enabled) {
-    harmorBuilder.encryption(result.encryption.password)
-  }
-  if (result.allCookies) {
-    harmorBuilder.allCookies()
-  }
-
-  if (result.cookies.length > 0) {
-    result.cookies.forEach(cookie => harmorBuilder.cookie(cookie))
-  }
-
-  if (result.allHeaders) {
-    harmorBuilder.allHeaders()
-  }
-
-  if (result.headers.length > 0) {
-    result.headers.forEach(header => harmorBuilder.header(header))
-  }
-
-  if (result.allQueryParams) {
-    harmorBuilder.allQueryParams()
-  }
-
-  if (result.queryParams.length > 0) {
-    harmorBuilder.queryParam(result.queryParams)
-  }
-
-  if (result.jwt) {
-    harmorBuilder.jwt()
-  }
-
-  if (result.contentKeys && result.contentKeys.length > 0) {
-    harmorBuilder.contentKey(result.contentKeys)
-  }
-
-  if (result.urlPathPrefixes && result.urlPathPrefixes.length > 0) {
-    harmorBuilder.byUrlPath(result.urlPathPrefixes)
-  }
-
-
-  const harmor = harmorBuilder.build()
   const output = harmor.sanitize(input)
-
 
   console.log('\n')
   fs.writeFileSync(path.join(dirname, `${fileName}.harmored.har`), output, 'utf8')
