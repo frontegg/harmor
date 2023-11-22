@@ -29,7 +29,7 @@ type RecursivePartial<T> = {
 };
 
 
-type Replacer<T> = T | ((value: T, harmor: Harmor) => any | null | undefined);
+type Replacer<T> = T | ((value: T, harmor: Harmor) => string | number | null | undefined | unknown | never);
 
 type PathSelectors = Partial<{
   [K in keyof Response as `response.${K}`]: Replacer<Response[K]>

@@ -1,0 +1,41 @@
+name: Push Workflow
+on:
+  # When commit pushed to branches not master nad release/next
+  push:
+    branches-ignore:
+      - 'master'
+      - 'release/next'
+env:
+  CI: true
+jobs:
+  lint:
+    name: 'Lint | Check Licenses'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Lint files
+        run: yarn lint
+
+      - name: Check licenses
+        id: check_licenses
+        run: |
+          npm install -g license-checker
+          license-checker --failOn "AGPL-1.0-only;AGPL-1.0-or-later;AGPL-3.0-only;AGPL-3.0-or-later;GPL-1.0-only;GPL-1.0-or-later;GPL-2.0-only;GPL-2.0-or-later;GPL-3.0-only;GPL-3.0-or-later;LGPL-2.0-only;LGPL-2.0-or-later;LGPL-2.1-only;LGPL-2.1-or-later;LGPL-3.0-only;LGPL-3.0-or-later;LGPLLR;MPL-1.1"
+  build:
+    name: 'Build'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Lint files
+        run: yarn build
+
