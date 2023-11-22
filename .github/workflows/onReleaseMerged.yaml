@@ -1,0 +1,123 @@
+name: Release Merge Workflow
+on:
+  pull_request:
+    branches:
+      - master
+    types: [ closed ]
+env:
+  CI: true
+jobs:
+  publish:
+    if: "contains(join(github.event.pull_request.labels.*.name, ','), 'Release') && github.event.pull_request.merged == true"
+    name: 'Install | Build | Publish'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Git Identity
+        run: |
+          git config --global user.name 'frontegg'
+          git config --global user.email 'frontegg@users.noreply.github.com'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Authenticate with Registry
+        run: |
+          yarn logout
+          echo "init-author-name=Frontegg LTD" > .npmrc
+          echo "init-author-email=hello@frontegg.com" >> .npmrc
+          echo "init-author-url=https://frontegg.com" >> .npmrc
+          echo "init-license=MIT" >> .npmrc
+          echo "always-auth=true" >> .npmrc
+          echo "registry=https://registry.npmjs.org" >> .npmrc
+          echo "_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
+          echo "@frontegg:registry=https://registry.npmjs.org" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
+          npm whoami
+        env:
+          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+      - name: Pack Package
+        run: |
+          yarn build
+
+      - name: Set Current Version
+        id: set_current_version
+        if: startsWith(github.event.pull_request.title, 'v')
+        shell: bash -ex {0}
+        run: |
+          CURRENT_VERSION=$(node -p 'require("./package.json").version')
+          echo "::set-output name=CURRENT_VERSION::${CURRENT_VERSION}"
+
+      - name: Tag Check
+        id: tag_check
+        shell: bash -ex {0}
+        run: |
+          GET_API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/tags/v${{ steps.set_current_version.outputs.CURRENT_VERSION }}"
+          http_status_code=$(curl -LI $GET_API_URL -o /dev/null -w '%{http_code}\n' -s \
+            -H "Authorization: token ${GITHUB_TOKEN}")
+          if [ "$http_status_code" -ne "404" ] ; then
+            echo "::set-output name=exists_tag::true"
+          else
+            echo "::set-output name=exists_tag::false"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Git Tag
+        if: steps.tag_check.outputs.exists_tag == 'false'
+        uses: azu/action-package-version-to-git-tag@v1
+        with:
+          version: ${{ steps.set_current_version.outputs.CURRENT_VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_repo: ${{ github.repository }}
+          git_commit_sha: ${{ github.sha }}
+          git_tag_prefix: "v"
+
+      - name: Create Release
+        id: create_release
+        if: steps.tag_check.outputs.exists_tag == 'false'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.set_current_version.outputs.CURRENT_VERSION }}
+          release_name: ${{ github.event.pull_request.title }}
+          body: |
+            ${{ github.event.pull_request.body }}
+          draft: false
+          prerelease: false
+
+      - name: "Copy .npmrc .npmignore to lib folders"
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require("fs");
+            const npmIgnore = fs.readFileSync('./.npmignore', { encoding:"utf-8" })
+            const npmrc = fs.readFileSync('./.npmrc', { encoding:"utf-8" })
+            const libs = ['harmor'];
+            libs.forEach(lib => {
+              fs.writeFileSync(`./dist/${lib}/.npmignore`, npmIgnore, { encoding:"utf-8" });
+              fs.writeFileSync(`./dist/${lib}/.npmrc`, npmrc, { encoding:"utf-8" });
+            });
+
+      - name: "Publish Release harmor to NPM"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: cd ./dist/harmor && chmod +x ./src/index.js && npm publish --tag latest
+
+      - uses: actions/github-script@0.8.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'https://github.com/${{ github.repository }}/releases/tag/v${{ steps.set_current_version.outputs.CURRENT_VERSION }} is released 🎉'
+            })

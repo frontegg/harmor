@@ -3,7 +3,6 @@ import { HARmorRule } from '../types';
 import { EncryptionOptions } from '../crypto';
 import { Content, Cookie, Entry, Header, PostData, QueryString } from 'har-format';
 import * as setValue from 'set-value';
-import { QuestionerResult } from '../questioner/types';
 import { HARmorTemplate } from '../templates/types';
 
 export default class HarmorBuilder {
@@ -228,12 +227,11 @@ export default class HarmorBuilder {
     return this
   }
 
-  private applicationJsonReplacer = (input: string, restrictedKeys: string[], harmor: Harmor): any => {
-
+  private applicationJsonReplacer = (input: string, restrictedKeys: string[], harmor: Harmor): string| undefined => {
     try {
       const json = JSON.parse(input)
 
-      const replacer = (key: string, value: any) => {
+      const replacer = (key: string, value: string) => {
         if (restrictedKeys.includes(key)) {
           if (harmor.shouldEncrypt) {
             return harmor.encrypt(value)
@@ -314,9 +312,8 @@ export default class HarmorBuilder {
   }
 
 
-
-  fromTemplate = (result: HARmorTemplate):Harmor => {
-    if(result.type === 'advanced') {
+  fromTemplate = (result: HARmorTemplate): Harmor => {
+    if (result.type === 'advanced') {
       return new Harmor(result)
     }
 

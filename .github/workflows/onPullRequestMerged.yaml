@@ -1,0 +1,135 @@
+name: Pull Request Merge Workflow
+on:
+  pull_request:
+    branches:
+      - master
+    types: [ closed ]
+env:
+  CI: true
+
+jobs:
+  lint:
+    if: "!contains(join(github.event.pull_request.labels.*.name, ','), 'Release') && github.event.pull_request.merged == true"
+    name: 'Lint | Check Licenses'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Lint files
+        run: yarn lint
+
+      - name: Check licenses
+        id: check_licenses
+        run: |
+          npm install -g license-checker
+          license-checker --failOn "AGPL-1.0-only;AGPL-1.0-or-later;AGPL-3.0-only;AGPL-3.0-or-later;GPL-1.0-only;GPL-1.0-or-later;GPL-2.0-only;GPL-2.0-or-later;GPL-3.0-only;GPL-3.0-or-later;LGPL-2.0-only;LGPL-2.0-or-later;LGPL-2.1-only;LGPL-2.1-or-later;LGPL-3.0-only;LGPL-3.0-or-later;LGPLLR;MPL-1.1"
+
+  createReleasePullRequest:
+    if: "!contains(join(github.event.pull_request.labels.*.name, ','), 'Release') && github.event.pull_request.merged == true"
+    name: 'Create Release Pull Request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Git Identity
+        run: |
+          git config --global user.name 'frontegg'
+          git config --global user.email 'frontegg@users.noreply.github.com'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Authenticate with Registry
+        run: |
+          yarn logout
+          echo "init-author-name=Frontegg LTD" > .npmrc
+          echo "init-author-email=hello@frontegg.com" >> .npmrc
+          echo "init-author-url=https://frontegg.com" >> .npmrc
+          echo "init-license=MIT" >> .npmrc
+          echo "always-auth=true" >> .npmrc
+          echo "registry=https://registry.npmjs.org" >> .npmrc
+          echo "_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
+          echo "@frontegg:registry=https://registry.npmjs.org" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
+          npm whoami
+        env:
+          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+      - name: Commit Version UP
+        run: |
+          yarn version --patch --no-git-tag-version --no-commit-hooks
+
+      - name: Pack Package
+        run: |
+          yarn build
+
+      - name: "Set incremented version"
+        uses: actions/github-script@v6
+        id: 'incremented-version'
+        with:
+          result-encoding: string
+          script: |
+            const {default: fs} = await import('fs');
+            const {version} = JSON.parse(fs.readFileSync('./package.json', {encoding: "utf-8"}));
+            return version;
+
+      - name: Commit changes
+        shell: bash -ex {0}
+        run: |
+          git add . && git commit -m "chore(release): publish ${{ steps.incremented-version.outputs.result }}"
+
+      - name: Create Release Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v3.5.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ secrets.GITHUB_WORKSPACE }}
+          commit-message: "Update v${{ steps.incremented-version.outputs.result }}"
+          committer: GitHub <noreply@github.com>
+          author: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+          title: 'v${{ steps.incremented-version.outputs.result }}'
+          body: |
+            # v${{ steps.incremented-version.outputs.result }}
+
+          labels: "Type: Release"
+          branch: "release/next"
+
+      - name: Prepare Pre-Release version to NPM
+        id: publish_pre_release_version
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          echo "::set-output name=LIB_VERSION::${version}"
+          echo "Publishing DEV version - v${version}-alpha.${{ github.run_id }}"
+          yarn version --new-version "${version}-alpha.${{ github.run_id }}" --no-git-tag-version --no-commit-hooks
+          git add .
+          git commit -m "chore: prelrease version"
+          
+          yarn build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Copy .npmrc .npmignore to lib folders"
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require("fs");
+            const npmIgnore = fs.readFileSync('./.npmignore', { encoding:"utf-8" })
+            const npmrc = fs.readFileSync('./.npmrc', { encoding:"utf-8" })
+            const libs = ['harmor'];
+            libs.forEach(lib => {
+              fs.writeFileSync(`./dist/${lib}/.npmignore`, npmIgnore, { encoding:"utf-8" });
+              fs.writeFileSync(`./dist/${lib}/.npmrc`, npmrc, { encoding:"utf-8" });
+            });
+
+      - name: "Publish Pre-Release harmor to NPM"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: cd ./dist/harmor && chmod +x ./src/index.js && npm publish --tag next
