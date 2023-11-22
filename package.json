@@ -16,7 +16,7 @@
     "Web-Traffic-Analysis",
     "HAR-Data-Management",
     "Network-Security-Tools",
-    "HAR-File-Integrity",
+    "HAR-File-Integrity"
   ],
   "scripts": {
     "build": "nx build",
