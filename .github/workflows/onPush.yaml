@@ -36,6 +36,6 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Lint files
+      - name: Build Library
         run: yarn build
 
