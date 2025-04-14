@@ -1,6 +1,6 @@
 {
   "name": "harmor",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "Apache License 2.0",
   "author": "Frontegg LTD",
   "description": "HARmor provides a range of cleaning and sanitization capabilities. HARmor can detect and scrub sensitive information, such as cookies, passwords, authorization headers, and query parameters.",
@@ -35,9 +35,6 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@types/har-format": "^1.2.14",
-    "@types/get-value": "^3.0.4",
-    "@types/set-value": "^4.0.2",
     "@nx/eslint": "17.0.2",
     "@nx/eslint-plugin": "17.0.2",
     "@nx/js": "17.0.2",
@@ -46,9 +43,12 @@
     "@nx/workspace": "17.0.2",
     "@swc-node/register": "~1.6.7",
     "@swc/core": "~1.3.85",
+    "@types/get-value": "^3.0.4",
+    "@types/har-format": "^1.2.14",
     "@types/minimist": "^1.2.4",
     "@types/node": "18.7.1",
     "@types/prompts": "^2.4.7",
+    "@types/set-value": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
     "@vitest/coverage-c8": "~0.32.0",
